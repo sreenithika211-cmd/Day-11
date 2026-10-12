@@ -1,0 +1,68 @@
+
+# 1. Import libraries
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 2. Create labeled temperature data
+temperatures = np.array([
+    0, 5, 10, 12, 15,
+    16, 18, 20, 22, 25,
+    26, 28, 30, 35, 40
+], dtype=float)
+
+# Labels: Low = 0, Medium = 1, High = 2
+labels = np.array([
+    0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2
+])
+
+class_names = ["Low", "Medium", "High"]
+
+# 3. Build a small dense neural network
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(1,)),
+    tf.keras.layers.Rescaling(1.0 / 40),
+    tf.keras.layers.Dense(16, activation="relu"),
+    tf.keras.layers.Dense(3, activation="softmax")
+])
+
+# 4. Compile the model
+model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+# 5. Train the model
+model.fit(temperatures, labels, epochs=300, verbose=0)
+
+print("Model training completed!")
+
+# 6. Test with new temperature readings
+test_temperatures = np.array([8, 20, 32], dtype=float)
+predictions = model.predict(test_temperatures, verbose=0)
+
+print("\nTemperature Classification:")
+for temp, prediction in zip(test_temperatures, predictions):
+    predicted_class = class_names[np.argmax(prediction)]
+    print(f"{temp:.0f}°C -> {predicted_class}")
+
+# 7. Plot the classification results
+test_classes = np.argmax(predictions, axis=1)
+
+plt.figure(figsize=(8, 4))
+plt.scatter(temperatures, labels, color="blue",
+            label="Training data")
+plt.scatter(test_temperatures, test_classes,
+            color="red", marker="x", s=100,
+            label="New predictions")
+
+plt.yticks([0, 1, 2], class_names)
+plt.xlabel("Temperature (°C)")
+plt.ylabel("Predicted category")
+plt.title("Simple Temperature Classifier")
+plt.grid(True)
+plt.legend()
+plt.show()
